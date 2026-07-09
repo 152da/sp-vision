@@ -1,6 +1,6 @@
 #ifndef AUTO_AIM__ARMOR_HPP
 #define AUTO_AIM__ARMOR_HPP
-
+//这个代码的作用是规定各种识别场景下，装甲板类，比如传统，yolo，yolov8等，所需要的结构体和枚举类型，包括颜色，装甲板类型，装甲板名称，优先级等，以及灯条和装甲板的结构体定义。
 #include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
 #include <string>
@@ -16,14 +16,14 @@ enum Color
   purple
 };
 const std::vector<std::string> COLORS = {"red", "blue", "extinguish", "purple"};
-
+//大小装甲板
 enum ArmorType
 {
   big,
   small
 };
 const std::vector<std::string> ARMOR_TYPES = {"big", "small"};
-
+//装甲板类型
 enum ArmorName
 {
   one,
@@ -38,7 +38,7 @@ enum ArmorName
 };
 const std::vector<std::string> ARMOR_NAMES = {"one",    "two",     "three", "four",     "five",
                                               "sentry", "outpost", "base",  "not_armor"};
-
+//击打优先级
 enum ArmorPriority
 {
   first = 1,
@@ -47,7 +47,7 @@ enum ArmorPriority
   forth,
   fifth
 };
-
+//id映射表
 // clang-format off
 const std::vector<std::tuple<Color, ArmorName, ArmorType>> armor_properties = {
   {blue, sentry, small},     {red, sentry, small},     {extinguish, sentry, small},
@@ -63,20 +63,20 @@ const std::vector<std::tuple<Color, ArmorName, ArmorType>> armor_properties = {
   {blue, four, big},         {red, four, big},         {extinguish, four, big},  
   {blue, five, big},         {red, five, big},         {extinguish, five, big}};
 // clang-format on
-
+//灯条结构体
 struct Lightbar
 {
-  std::size_t id;
-  Color color;
-  cv::Point2f center, top, bottom, top2bottom;
-  std::vector<cv::Point2f> points;
-  double angle, angle_error, length, width, ratio;
-  cv::RotatedRect rotated_rect;
+  std::size_t id;//id
+  Color color;//颜色
+  cv::Point2f center, top, bottom, top2bottom;//中心点、顶点、底点、灯条向量
+  std::vector<cv::Point2f> points;//存储端点集合的容器
+  double angle, angle_error, length, width, ratio;// 倾角、绝对角度误差、长、宽、宽高比
+  cv::RotatedRect rotated_rect;//opencv椭圆/外接矩形对象
 
   Lightbar(const cv::RotatedRect & rotated_rect, std::size_t id);
   Lightbar() {};
 };
-
+//装甲板结构体，包括颜色，角点坐标，中心点坐标，长宽比，矩形误差，类型，名称，优先级，类别id，包围盒，图案，置信度等信息
 struct Armor
 {
   Color color;

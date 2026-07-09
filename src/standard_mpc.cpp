@@ -39,19 +39,19 @@ int main(int argc, char * argv[])
 
   tools::Exiter exiter;
   tools::Plotter plotter;
-  tools::Recorder recorder;
-
+  tools::Recorder recorder;//记录img，q，t
+  //参数都是从ymal文件中读取
   io::Gimbal gimbal(config_path);
   io::Camera camera(config_path);
+  //打人
+  auto_aim::YOLO yolo(config_path, true);//识别
+  auto_aim::Solver solver(config_path);//pnp，相机参数，坐标转换等
+  auto_aim::Tracker tracker(config_path, solver);//跟踪和ekf
+  auto_aim::Planner planner(config_path);//mpc规划
 
-  auto_aim::YOLO yolo(config_path, true);
-  auto_aim::Solver solver(config_path);
-  auto_aim::Tracker tracker(config_path, solver);
-  auto_aim::Planner planner(config_path);
-
-  tools::ThreadSafeQueue<std::optional<auto_aim::Target>, true> target_queue(1);
+  tools::ThreadSafeQueue<std::optional<auto_aim::Target>, true> target_queue(1);//目标队列，只保留最新目标
   target_queue.push(std::nullopt);
-
+  //打符
   auto_buff::Buff_Detector buff_detector(config_path);
   auto_buff::Solver buff_solver(config_path);
   auto_buff::SmallTarget buff_small_target;
@@ -59,15 +59,15 @@ int main(int argc, char * argv[])
   auto_buff::Aimer buff_aimer(config_path);
 
   cv::Mat img;
-  Eigen::Quaterniond q;
+  Eigen::Quaterniond q;//云台/IMU 姿态四元数
   std::chrono::steady_clock::time_point t;
 
   std::atomic<bool> quit = false;
 
-  std::atomic<io::GimbalMode> mode{io::GimbalMode::IDLE};
+  std::atomic<io::GimbalMode> mode{io::GimbalMode::IDLE};//原子量，模式只能有一个
   auto last_mode{io::GimbalMode::IDLE};
 
-  auto plan_thread = std::thread([&]() {
+  auto plan_thread = std::thread([&]() {//mpc规划单独一个线程
     auto t0 = std::chrono::steady_clock::now();
     uint16_t last_bullet_count = 0;
 
@@ -75,13 +75,13 @@ int main(int argc, char * argv[])
       if (!target_queue.empty() && mode == io::GimbalMode::AUTO_AIM) {
         auto target = target_queue.front();
         auto gs = gimbal.state();
-        auto plan = planner.plan(target, gs.bullet_speed);
+        auto plan = planner.plan(target, gs.bullet_speed);//mpc规划
 
         gimbal.send(
           plan.control, plan.fire, plan.yaw, plan.yaw_vel, plan.yaw_acc, plan.pitch, plan.pitch_vel,
           plan.pitch_acc);
 
-        std::this_thread::sleep_for(10ms);
+        std::this_thread::sleep_for(10ms);//自瞄状态下规划线程100Hz运行，感觉可调
       } else
         std::this_thread::sleep_for(200ms);
     }
@@ -94,19 +94,19 @@ int main(int argc, char * argv[])
       tools::logger()->info("Switch to {}", gimbal.str(mode));
       last_mode = mode.load();
     }
-
+    //一直在读取相机和姿态
     camera.read(img, t);
     auto q = gimbal.q(t);
     auto gs = gimbal.state();
-    recorder.record(img, q, t);
-    solver.set_R_gimbal2world(q);
+    recorder.record(img, q, t);//主循环存放图像，姿态等数据即可，mpc分线程不用考虑记录问题
+    solver.set_R_gimbal2world(q);//坐标系转换
 
     /// 自瞄
     if (mode.load() == io::GimbalMode::AUTO_AIM) {
       auto armors = yolo.detect(img);
       auto targets = tracker.track(armors, t);
       if (!targets.empty())
-        target_queue.push(targets.front());
+        target_queue.push(targets.front());//主循环只需要把目标放入队列，mpc线程会自动读取最新目标进行规划
       else
         target_queue.push(std::nullopt);
     }

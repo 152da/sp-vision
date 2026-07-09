@@ -10,7 +10,7 @@
 
 namespace auto_aim
 {
-Detector::Detector(const std::string & config_path, bool debug)
+Detector::Detector(const std::string & config_path, bool debug)//构造函数，初始化
 : classifier_(config_path), debug_(debug)
 {
   auto yaml = YAML::LoadFile(config_path);
@@ -36,7 +36,7 @@ std::list<Armor> Detector::detect(const cv::Mat & bgr_img, int frame_count)
   cv::Mat gray_img;
   cv::cvtColor(bgr_img, gray_img, cv::COLOR_BGR2GRAY);
 
-  // 进行二值化
+  // 进行二值化，二值化后，发光的会变白，非发光的会变黑
   cv::Mat binary_img;
   cv::threshold(gray_img, binary_img, threshold_, 255, cv::THRESH_BINARY);
   cv::imshow("binary_img", binary_img);
@@ -45,7 +45,7 @@ std::list<Armor> Detector::detect(const cv::Mat & bgr_img, int frame_count)
   std::vector<std::vector<cv::Point>> contours;
   cv::findContours(binary_img, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
 
-  // 获取灯条
+  // 获取灯条，找到所有白色连通区域即为灯条，利用最小外接矩形拟合灯条
   std::size_t lightbar_id = 0;
   std::list<Lightbar> lightbars;
   for (const auto & contour : contours) {
@@ -62,7 +62,7 @@ std::list<Armor> Detector::detect(const cv::Mat & bgr_img, int frame_count)
   // 将灯条从左到右排序
   lightbars.sort([](const Lightbar & a, const Lightbar & b) { return a.center.x < b.center.x; });
 
-  // 获取装甲板
+  // 获取装甲板，主要是靠装甲板几何尺寸确定那些灯条是装甲板的组成部分，装甲板由两个灯条组成
   std::list<Armor> armors;
   for (auto left = lightbars.begin(); left != lightbars.end(); left++) {
     for (auto right = std::next(left); right != lightbars.end(); right++) {
@@ -119,14 +119,14 @@ std::list<Armor> Detector::detect(const cv::Mat & bgr_img, int frame_count)
   return armors;
 }
 
-bool Detector::detect(Armor & armor, const cv::Mat & bgr_img)
+bool Detector::detect(Armor & armor, const cv::Mat & bgr_img)//对yolo结果做四个角点的修正
 {
-  // 取得四个角点
+  // 取得四个角点，四个角点信息，来自YOLO检测结果，四个角点是装甲板的四个顶点
   auto tl = armor.points[0];
   auto tr = armor.points[1];
   auto br = armor.points[2];
   auto bl = armor.points[3];
-  // 计算向量和调整后的点
+  // 计算向量和调整后的点，通过yolo给出的结果扩展的到roi，然后进行传统处理
   auto lt2b = bl - tl;
   auto rt2b = br - tr;
   auto tl1 = (tl + bl) / 2 - lt2b;
@@ -142,7 +142,7 @@ bool Detector::detect(Armor & armor, const cv::Mat & bgr_img)
   // 构造新的四个角点
   std::vector<cv::Point> points = {tl2, tr2, br2, bl2};
   auto armor_rotaterect = cv::minAreaRect(points);
-  cv::Rect boundingBox = armor_rotaterect.boundingRect();
+  cv::Rect boundingBox = armor_rotaterect.boundingRect();//根据角点扩展ROI
   // 检查boundingBox是否超出图像边界
   if (
     boundingBox.x < 0 || boundingBox.y < 0 || boundingBox.x + boundingBox.width > bgr_img.cols ||
@@ -155,7 +155,7 @@ bool Detector::detect(Armor & armor, const cv::Mat & bgr_img)
   if (armor_roi.empty()) {
     return false;
   }
-
+  //下面是对前面处理yolo的图像进行处理
   // 彩色图转灰度图
   cv::Mat gray_img;
   cv::cvtColor(armor_roi, gray_img, cv::COLOR_BGR2GRAY);

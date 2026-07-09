@@ -17,9 +17,9 @@ class YOLO11 : public YOLOBase
 {
 public:
   YOLO11(const std::string & config_path, bool debug);
-
+  //主检测接口，输入图像和帧数，输出装甲板序列
   std::list<Armor> detect(const cv::Mat & bgr_img, int frame_count) override;
-
+  //后处理接口
   std::list<Armor> postprocess(
     double scale, cv::Mat & output, const cv::Mat & bgr_img, int frame_count) override;
 
@@ -28,18 +28,18 @@ private:
   std::string save_path_, debug_path_;
   bool debug_, use_roi_;
 
-  const int class_num_ = 38;
-  const float nms_threshold_ = 0.3;
-  const float score_threshold_ = 0.7;
+  const int class_num_ = 38;//类别数38
+  const float nms_threshold_ = 0.3;//NMS阈值
+  const float score_threshold_ = 0.7;//置信度阈值,这些参数都从ymal读取
   double min_confidence_, binary_threshold_;
 
   ov::Core core_;
   ov::CompiledModel compiled_model_;
-
+//roi区域，roi偏移量，tmp_img_临时图像
   cv::Rect roi_;
   cv::Point2f offset_;
   cv::Mat tmp_img_;
-
+//传统detector对象，用于在yolo检测后进一步获取更准确的角点信息
   Detector detector_;
 
   bool check_name(const Armor & armor) const;

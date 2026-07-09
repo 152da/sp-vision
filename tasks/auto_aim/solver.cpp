@@ -9,7 +9,7 @@
 
 namespace auto_aim
 {
-constexpr double LIGHTBAR_LENGTH = 56e-3;     // m
+constexpr double LIGHTBAR_LENGTH = 56e-3;     // m，真实装甲板尺寸
 constexpr double BIG_ARMOR_WIDTH = 230e-3;    // m
 constexpr double SMALL_ARMOR_WIDTH = 135e-3;  // m
 
@@ -27,7 +27,7 @@ const std::vector<cv::Point3f> SMALL_ARMOR_POINTS{
 Solver::Solver(const std::string & config_path) : R_gimbal2world_(Eigen::Matrix3d::Identity())
 {
   auto yaml = YAML::LoadFile(config_path);
-
+  //读取并保存相机内参矩阵、畸变系数、云台系到IMU机体系的旋转矩阵、相机系到云台系的旋转矩阵、相机系到云台系的平移向量
   auto R_gimbal2imubody_data = yaml["R_gimbal2imubody"].as<std::vector<double>>();
   auto R_camera2gimbal_data = yaml["R_camera2gimbal"].as<std::vector<double>>();
   auto t_camera2gimbal_data = yaml["t_camera2gimbal"].as<std::vector<double>>();
@@ -73,8 +73,8 @@ void Solver::solve(Armor & armor) const
   cv::cv2eigen(rmat, R_armor2camera);
   Eigen::Matrix3d R_armor2gimbal = R_camera2gimbal_ * R_armor2camera;
   Eigen::Matrix3d R_armor2world = R_gimbal2world_ * R_armor2gimbal;
-  armor.ypr_in_gimbal = tools::eulers(R_armor2gimbal, 2, 1, 0);
-  armor.ypr_in_world = tools::eulers(R_armor2world, 2, 1, 0);
+  armor.ypr_in_gimbal = tools::eulers(R_armor2gimbal, 2, 1, 0);//云台系下的欧拉角
+  armor.ypr_in_world = tools::eulers(R_armor2world, 2, 1, 0);//世界系下的欧拉角
 
   armor.ypd_in_world = tools::xyz2ypd(armor.xyz_in_world);
 
@@ -84,10 +84,10 @@ void Solver::solve(Armor & armor) const
                      armor.name == ArmorName::five);
   if (is_balance) return;
 
-  optimize_yaw(armor);
+  optimize_yaw(armor);//优化装甲板yaw角
 }
 
-std::vector<cv::Point2f> Solver::reproject_armor(
+std::vector<cv::Point2f> Solver::reproject_armor(//重投影装甲板的四个角点到像素坐标系
   const Eigen::Vector3d & xyz_in_world, double yaw, ArmorType type, ArmorName name) const
 {
   auto sin_yaw = std::sin(yaw);
@@ -193,7 +193,7 @@ double Solver::oupost_reprojection_error(Armor armor, const double & pitch)
   return error;
 }
 
-void Solver::optimize_yaw(Armor & armor) const
+void Solver::optimize_yaw(Armor & armor) const//优化yaw角，通过扫描140度范围内的yaw角，计算重投影误差，选择最小误差的yaw角作为装甲板的yaw角
 {
   Eigen::Vector3d gimbal_ypr = tools::eulers(R_gimbal2world_, 2, 1, 0);
 
@@ -214,7 +214,7 @@ void Solver::optimize_yaw(Armor & armor) const
   }
 
   armor.yaw_raw = armor.ypr_in_world[0];
-  armor.ypr_in_world[0] = best_yaw;
+  armor.ypr_in_world[0] = best_yaw;//最确信的yaw角
 }
 
 double Solver::SJTU_cost(

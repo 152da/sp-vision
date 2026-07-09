@@ -16,6 +16,7 @@ namespace io
 {
 struct __attribute__((packed)) GimbalToVision
 {
+  //相比qy的协议，这里下位机多一个四元数
   uint8_t head[2] = {'S', 'P'};
   uint8_t mode;  // 0: 空闲, 1: 自瞄, 2: 小符, 3: 大符
   float q[4];    // wxyz顺序

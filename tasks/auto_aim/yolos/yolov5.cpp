@@ -7,7 +7,7 @@
 
 #include "tools/img_tools.hpp"
 #include "tools/logger.hpp"
-
+//yolo负责识别装甲板，然后用传统方法进一步获取更准确的角点信息
 namespace auto_aim
 {
 YOLOV5::YOLOV5(const std::string & config_path, bool debug)

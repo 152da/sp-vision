@@ -7,6 +7,7 @@
 
 namespace io
 {
+  //构造函数，开启串口，以及读取线程
 Gimbal::Gimbal(const std::string & config_path)
 {
   auto yaml = tools::load(config_path);
@@ -60,7 +61,7 @@ std::string Gimbal::str(GimbalMode mode) const
       return "INVALID";
   }
 }
-
+//插值计算拍摄机姿态，返回时间点t的四元数
 Eigen::Quaterniond Gimbal::q(std::chrono::steady_clock::time_point t)
 {
   while (true) {
@@ -76,7 +77,7 @@ Eigen::Quaterniond Gimbal::q(std::chrono::steady_clock::time_point t)
     return q_c;
   }
 }
-
+//两种封装的发送
 void Gimbal::send(io::VisionToGimbal VisionToGimbal)
 {
   tx_data_.mode = VisionToGimbal.mode;
@@ -116,24 +117,25 @@ void Gimbal::send(
     tools::logger()->warn("[Gimbal] Failed to write serial: {}", e.what());
   }
 }
-
+//读取，只要是读取失败就返回false，读取成功返回true
 bool Gimbal::read(uint8_t * buffer, size_t size)
 {
   try {
+    //如果读取到的字节数相等
     return serial_.read(buffer, size) == size;
   } catch (const std::exception & e) {
     // tools::logger()->warn("[Gimbal] Failed to read serial: {}", e.what());
     return false;
   }
 }
-
+//读取线程，读取到数据后更新状态和模式，并将四元数和时间戳放入队列
 void Gimbal::read_thread()
 {
   tools::logger()->info("[Gimbal] read_thread started.");
   int error_count = 0;
 
   while (!quit_) {
-    if (error_count > 5000) {
+    if (error_count > 5000) {//看门狗
       error_count = 0;
       tools::logger()->warn("[Gimbal] Too many errors, attempting to reconnect...");
       reconnect();
@@ -155,12 +157,12 @@ void Gimbal::read_thread()
       error_count++;
       continue;
     }
-
+    //CRC校验
     if (!tools::check_crc16(reinterpret_cast<uint8_t *>(&rx_data_), sizeof(rx_data_))) {
       tools::logger()->debug("[Gimbal] CRC16 check failed.");
       continue;
     }
-
+      //到这里算是校验成功，把数据存入队列和状态
     error_count = 0;
     Eigen::Quaterniond q(rx_data_.q[0], rx_data_.q[1], rx_data_.q[2], rx_data_.q[3]);
     queue_.push({q, t});

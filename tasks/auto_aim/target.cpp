@@ -24,9 +24,9 @@ Target::Target(
   auto r = radius;
   priority = armor.priority;
   const Eigen::VectorXd & xyz = armor.xyz_in_world;
-  const Eigen::VectorXd & ypr = armor.ypr_in_world;
+  const Eigen::VectorXd & ypr = armor.ypr_in_world;//拿到装甲板在世界坐标系下的xyz坐标和ypr角度
 
-  // 旋转中心的坐标
+  // 旋转中心的坐标,利用关测数据反推得到
   auto center_x = xyz[0] + r * std::cos(ypr[0]);
   auto center_y = xyz[1] + r * std::sin(ypr[0]);
   auto center_z = xyz[2];
@@ -37,7 +37,7 @@ Target::Target(
   // l: r2 - r1
   // h: z2 - z1
   Eigen::VectorXd x0{{center_x, 0, center_y, 0, center_z, 0, ypr[0], 0, r, 0, 0}};  //初始化预测量
-  Eigen::MatrixXd P0 = P0_dig.asDiagonal();
+  Eigen::MatrixXd P0 = P0_dig.asDiagonal();//初始化预测量协方差矩阵
 
   // 防止夹角求和出现异常值
   auto x_add = [](const Eigen::VectorXd & a, const Eigen::VectorXd & b) -> Eigen::VectorXd {
@@ -65,7 +65,7 @@ Target::Target(double x, double vyaw, double radius, double h) : armor_num_(4)
   ekf_ = tools::ExtendedKalmanFilter(x0, P0, x_add);  //初始化滤波器（预测量、预测量协方差）
 }
 
-void Target::predict(std::chrono::steady_clock::time_point t)
+void Target::predict(std::chrono::steady_clock::time_point t)//EKF预测函数，输入当前时间，计算时间差dt，调用ekf_.predict()进行预测
 {
   auto dt = tools::delta_time(t, t_);
   predict(dt);
@@ -132,21 +132,21 @@ void Target::predict(double dt)
   if (this->convergened() && this->name == ArmorName::outpost && std::abs(this->ekf_.x[7]) > 2)
     this->ekf_.x[7] = this->ekf_.x[7] > 0 ? 2.51 : -2.51;
 
-  ekf_.predict(F, Q, f);
+  ekf_.predict(F, Q, f);//输入状态转移矩阵F，预测过程噪声偏差的方差Q，非线性转换函数f，进行预测
 }
 
-void Target::update(const Armor & armor)
+void Target::update(const Armor & armor)//这个update负责观测当前装甲板属于整车模型的哪一个装甲板
 {
   // 装甲板匹配
   int id;
   auto min_angle_error = 1e10;
   const std::vector<Eigen::Vector4d> & xyza_list = armor_xyza_list();
 
-  std::vector<std::pair<Eigen::Vector4d, int>> xyza_i_list;
+  std::vector<std::pair<Eigen::Vector4d, int>> xyza_i_list;//对应装甲板的索引和位置列表
   for (int i = 0; i < armor_num_; i++) {
     xyza_i_list.push_back({xyza_list[i], i});
   }
-
+  //将装甲板按照距离排序
   std::sort(
     xyza_i_list.begin(), xyza_i_list.end(),
     [](const std::pair<Eigen::Vector4d, int> & a, const std::pair<Eigen::Vector4d, int> & b) {
@@ -167,9 +167,9 @@ void Target::update(const Armor & armor)
       min_angle_error = angle_error;
     }
   }
-
+  //如果匹配到的装甲板id和上一次的id不一样，说明发生了装甲板切换
   if (id != 0) jumped = true;
-
+  //这次观测匹配到的装甲板编号和上一次观测匹配到的装甲板编号不同=> 发生了装甲板切换
   if (id != last_id) {
     is_switch_ = true;
   } else {
@@ -180,11 +180,11 @@ void Target::update(const Armor & armor)
 
   last_id = id;
   update_count_++;
-
+//EKF更新函数，输入观测量armor，计算观测矩阵H，测量过程噪声偏差的方差R，非线性转换函数h，进行更新
   update_ypda(armor, id);
 }
 
-void Target::update_ypda(const Armor & armor, int id)
+void Target::update_ypda(const Armor & armor, int id)//负责真正的EKF数学更新，根据每个装甲板id来计算观测矩阵H，测量过程噪声偏差的方差R，非线性转换函数h，进行更新
 {
   //观测jacobi
   Eigen::MatrixXd H = h_jacobian(ekf_.x, id);
@@ -193,7 +193,7 @@ void Target::update_ypda(const Armor & armor, int id)
   auto delta_angle = tools::limit_rad(armor.ypr_in_world[0] - center_yaw);
   Eigen::VectorXd R_dig{
     {4e-3, 4e-3, log(std::abs(delta_angle) + 1) + 1,
-     log(std::abs(armor.ypd_in_world[2]) + 1) / 200 + 9e-2}};
+     log(std::abs(armor.ypd_in_world[2]) + 1) / 200 + 9e-2}};//动态设置观测噪声
 
   //测量过程噪声偏差的方差
   Eigen::MatrixXd R = R_dig.asDiagonal();
