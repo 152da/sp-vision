@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
-set(OpenVINO_DIR "/opt/intel/openvino_2024.6.0/runtime/cmake")
+if(NOT OpenVINO_DIR)
+  if(EXISTS "/opt/intel/openvino_2024.6.0/runtime/cmake")
+    set(OpenVINO_DIR "/opt/intel/openvino_2024.6.0/runtime/cmake")
+  elseif(EXISTS "/opt/intel/openvino/runtime/cmake")
+    set(OpenVINO_DIR "/opt/intel/openvino/runtime/cmake")
+  endif()
+endif()
 
 find_package(OpenVINO REQUIRED)
 find_package(Ceres REQUIRED)

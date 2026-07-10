@@ -1,0 +1,43 @@
+services:
+  sp_vision:
+    image: sp-vision-25-nuc
+    build:
+      context: .
+      dockerfile: Dockerfile.nuc
+      network: host
+    container_name: sp-vision-25-nuc
+    network_mode: host
+    privileged: true
+    ipc: host
+    working_dir: /workspace/code
+    volumes:
+      - .:/workspace/code:rw
+      - /dev:/dev
+      - /dev/bus/usb:/dev/bus/usb
+      - /opt/MVS:/opt/MVS:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /run/udev:/run/udev:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../res/models:/workspace/models:rw
+      - ../res/images:/workspace/images:ro
+      - ../res/videos:/workspace/videos:ro
+      - ../res/records:/workspace/records:rw
+    devices:
+      - /dev/dri:/dev/dri
+    device_cgroup_rules:
+      - "c 189:* rmw"
+      - "c 226:* rmw"
+    group_add:
+      - video
+      - render
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - GENICAM_GENTL64_PATH=/opt/MVS/lib/64
+      - LIBVA_DRIVER_NAME=iHD
+      - OV_CACHE_DIR=/workspace/models/openvino/cache
+      - ZE_ENABLE_PCI_ID_DEVICE_ORDER=1
+      - LD_LIBRARY_PATH=/workspace/code/io/hikrobot/lib/amd64:/workspace/code/io/mindvision/lib/amd64:/opt/MVS/lib/64:/usr/local/lib:/usr/lib/x86_64-linux-gnu
+    command: /bin/bash
+    stdin_open: true
+    tty: true

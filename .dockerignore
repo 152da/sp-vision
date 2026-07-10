@@ -1,0 +1,15 @@
+.git
+.vscode
+build
+cmake-build-*
+logs
+MvSdkLog
+records
+records_*
+records_auto_buff_big
+imgs
+testvideos
+*.avi
+*.mp4
+*.bag
+*.log
