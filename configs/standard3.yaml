@@ -7,7 +7,7 @@ classify_model: assets/tiny_resnet.onnx
 yolo11_model_path: assets/yolo11.xml
 yolov8_model_path: assets/yolov8.xml
 yolov5_model_path: assets/yolov5.xml
-device: GPU
+device: CPU #先用CPU试一下
 min_confidence: 0.8
 use_traditional: true
 
@@ -52,7 +52,7 @@ judge_distance: 2 #距离判断阈值
 auto_fire: true # 是否由自瞄控制射击
 
 camera_name: "hikrobot"
-exposure_ms: 2.5
+exposure_ms: 3.5
 gain: 16.9
 vid_pid: "2bdf:0001"
 
@@ -62,9 +62,8 @@ vid_pid: "2bdf:0001"
 R_gimbal2imubody: [1, 0, 0, 0, 1, 0, 0, 0, 1]
 
 # 重投影误差: 0.1820px
-camera_matrix: [1785.4881526822305, 0, 672.4806478241826, 0, 1785.026019470562, 559.89603224794314, 0, 0, 1]
-distort_coeffs: [-0.076005079619881746, 0.11182817466388446, 0.0005362204787722057, -0.0027546300984895122, 0]
-
+camera_matrix: [3493.9956261126845, 0.0, 729.6467067703888, 0.0, 3492.300480118811, 558.0420551176968, 0.0, 0.0, 1.0]
+distort_coeffs:  [-0.02867129121238352, 1.4082672316054885, -0.00014060350436161462, -0.00043834213365239946, -18.969123774218954]
 # 相机同理想情况的偏角: yaw1.44 pitch-7.28 roll0.96 degree
 # 标定板到世界坐标系原点的水平距离: 1.13 m
 # 标定板同竖直摆放时的偏角: yaw7.61 pitch13.92 roll-0.46 degree
