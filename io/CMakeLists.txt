@@ -17,6 +17,9 @@ add_library(io STATIC
 
 # hikrobot
 target_include_directories(io PUBLIC hikrobot/include)
+if(EXISTS "/opt/MVS/lib/64")
+  target_link_directories(io PUBLIC /opt/MVS/lib/64)
+endif()
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
   target_link_directories(io PUBLIC hikrobot/lib/amd64)
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")

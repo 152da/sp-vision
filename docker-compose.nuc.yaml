@@ -37,7 +37,7 @@ services:
       - LIBVA_DRIVER_NAME=iHD
       - OV_CACHE_DIR=/workspace/models/openvino/cache
       - ZE_ENABLE_PCI_ID_DEVICE_ORDER=1
-      - LD_LIBRARY_PATH=/workspace/code/io/hikrobot/lib/amd64:/workspace/code/io/mindvision/lib/amd64:/opt/MVS/lib/64:/usr/local/lib:/usr/lib/x86_64-linux-gnu
+      - LD_LIBRARY_PATH=/opt/MVS/lib/64:/workspace/code/io/hikrobot/lib/amd64:/workspace/code/io/mindvision/lib/amd64:/usr/local/lib:/usr/lib/x86_64-linux-gnu
     command: /bin/bash
     stdin_open: true
     tty: true
