@@ -62,9 +62,8 @@ void Solver::solve(Armor & armor) const
     object_points, armor.points, camera_matrix_, distort_coeffs_, rvec, tvec, false,
     cv::SOLVEPNP_IPPE);
 
-  Eigen::Vector3d xyz_in_camera;
-  cv::cv2eigen(tvec, xyz_in_camera);
-  armor.xyz_in_gimbal = R_camera2gimbal_ * xyz_in_camera + t_camera2gimbal_;
+  cv::cv2eigen(tvec, armor.xyz_in_camera);
+  armor.xyz_in_gimbal = R_camera2gimbal_ * armor.xyz_in_camera + t_camera2gimbal_;
   armor.xyz_in_world = R_gimbal2world_ * armor.xyz_in_gimbal;
 
   cv::Mat rmat;
