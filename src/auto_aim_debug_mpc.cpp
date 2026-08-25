@@ -121,7 +121,9 @@ void draw_top_view(
 
 const std::string keys =
   "{help h usage ? |                        | 输出命令行参数说明}"
-  "{@config-path   | configs/sentry.yaml | 位置参数，yaml配置文件路径 }";
+  "{@config-path   | configs/sentry.yaml | 位置参数，yaml配置文件路径 }"
+  "{top-view tv    | false                  | draw tracker top view }"
+  "{future-view fv | false                  | draw future model projection }";
 
 int main(int argc, char * argv[])
 {
@@ -130,6 +132,8 @@ int main(int argc, char * argv[])
 
   cv::CommandLineParser cli(argc, argv, keys);
   auto config_path = cli.get<std::string>(0);
+  const bool enable_top_view = cli.get<bool>("top-view");
+  const bool enable_future_view = cli.get<bool>("future-view");
   if (cli.has("help") || config_path.empty()) {
     cli.printMessage();
     return 0;
@@ -155,6 +159,11 @@ int main(int argc, char * argv[])
     uint16_t last_bullet_count = 0;
 
     while (!quit) {
+      if (gimbal.mode() != io::GimbalMode::AUTO_AIM) {
+        std::this_thread::sleep_for(200ms);
+        continue;
+      }
+
       auto target = target_queue.front();
       auto gs = gimbal.state();
       auto plan = planner.plan(target, gs.bullet_speed);
@@ -290,27 +299,29 @@ int main(int argc, char * argv[])
         tools::draw_points(img, image_points, {0, 255, 0});
       }
 
-      auto future_target = target;
-      for (int i = 1; i <= 20; i++) {
-        future_target.predict(0.025);
+      if (enable_future_view) {
+        auto future_target = target;
+        for (int i = 1; i <= 20; i++) {
+          future_target.predict(0.025);
 
-        Eigen::Vector4d nearest_xyza;
-        double min_dist = 1e10;
-        for (const auto & xyza : future_target.armor_xyza_list()) {
-          auto dist = xyza.head<2>().norm();
-          if (dist < min_dist) {
-            min_dist = dist;
-            nearest_xyza = xyza;
+          Eigen::Vector4d nearest_xyza;
+          double min_dist = 1e10;
+          for (const auto & xyza : future_target.armor_xyza_list()) {
+            auto dist = xyza.head<2>().norm();
+            if (dist < min_dist) {
+              min_dist = dist;
+              nearest_xyza = xyza;
+            }
           }
-        }
 
-        auto future_points = solver.reproject_armor(
-          nearest_xyza.head(3), nearest_xyza[3], future_target.armor_type, future_target.name);
-        cv::Point2f center{0, 0};
-        for (const auto & point : future_points) center += point;
-        center *= 0.25f;
-        cv::circle(img, center, 2, {255, 255, 0}, -1);
-        if (i % 5 == 0) tools::draw_points(img, future_points, {255, 255, 0}, 1);
+          auto future_points = solver.reproject_armor(
+            nearest_xyza.head(3), nearest_xyza[3], future_target.armor_type, future_target.name);
+          cv::Point2f center{0, 0};
+          for (const auto & point : future_points) center += point;
+          center *= 0.25f;
+          cv::circle(img, center, 2, {255, 255, 0}, -1);
+          if (i % 5 == 0) tools::draw_points(img, future_points, {255, 255, 0}, 1);
+        }
       }
 
       Eigen::Vector4d aim_xyza = planner.debug_xyza;
@@ -320,7 +331,7 @@ int main(int argc, char * argv[])
     }
 
     cv::resize(img, img, {}, 0.5, 0.5);  // 显示时缩小图片尺寸
-    if (top_view_target) draw_top_view(img, top_view_target.value(), armors);
+    if (enable_top_view && top_view_target) draw_top_view(img, top_view_target.value(), armors);
     cv::imshow("reprojection", img);
     auto key = cv::waitKey(1);
     if (key == 'q') break;
