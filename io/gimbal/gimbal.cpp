@@ -135,7 +135,7 @@ void Gimbal::read_thread()
   int error_count = 0;
 
   while (!quit_) {
-    if (error_count > 5000) {//看门狗
+    if (error_count > 50000) {//看门狗
       error_count = 0;
       tools::logger()->warn("[Gimbal] Too many errors, attempting to reconnect...");
       reconnect();

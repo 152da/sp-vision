@@ -37,15 +37,13 @@ max_temp_lost_count: 15
 outpost_max_temp_lost_count: 75
 
 #####-----aimer参数-----#####
-yaw_offset: 0 # degree
-pitch_offset: 0 # degree
+yaw_offset: -0.5 # degree -2.5
+pitch_offset: 3.0 # degree 2
 comming_angle: 55 # degree
 leaving_angle: 20 # degree
 decision_speed: 7 # rad/s
 high_speed_delay_time: 0.0 # s
-low_speed_delay_time: 0.0 # s planner use this value
-
-#####-----shooter参数-----#####
+low_speed_delay_time: 0.0 # s
 first_tolerance: 3 # 近距离射击容差，degree
 second_tolerance: 2 # 远距离射击容差，degree
 judge_distance: 2 #距离判断阈值
@@ -62,15 +60,15 @@ vid_pid: "2bdf:0001"
 R_gimbal2imubody: [1, 0, 0, 0, 1, 0, 0, 0, 1]
 
 # 重投影误差: 0.1820px
-camera_matrix: [3493.9956261126845, 0.0, 729.6467067703888, 0.0, 3492.300480118811, 558.0420551176968, 0.0, 0.0, 1.0]
-distort_coeffs:  [-0.02867129121238352, 1.4082672316054885, -0.00014060350436161462, -0.00043834213365239946, -18.969123774218954]
+camera_matrix: [3486.90443207, 0.0, 727.95309073, 0.0, 3485.85883213, 560.071046229, 0.0, 0.0, 1.0]
+distort_coeffs: [0.00924805829675, -0.75250953276, -0.000832057249577, 0.000523351572806, 29.245898117]
 # 相机同理想情况的偏角: yaw1.44 pitch-7.28 roll0.96 degree
 # 标定板到世界坐标系原点的水平距离: 1.13 m
 # 标定板同竖直摆放时的偏角: yaw7.61 pitch13.92 roll-0.46 degree
-t_camera2gimbal: [0.090771665, -0.041686926, 0.043863608]
+t_camera2gimbal: [0.053720094, -0.064421517, 0.033328438]
 
 R_camera2gimbal:
-[0.009322768, -0.049592652, 0.998726016, -0.999954602, 0.001504939, 0.009408965, -0.001969638, -0.998768394, -0.049576370]
+[0.016432608, -0.051170997, 0.998554705, -0.999731221, -0.017175689, 0.015571800, 0.016354040, -0.998542200, -0.051439485]
 
 
 #####-----cboard参数-----#####
@@ -87,7 +85,7 @@ pitch_kp: 0
 pitch_kd: 0
 
 #####-----planner-----#####
-fire_thresh: 0.0035
+fire_thresh: 0.017 #0.0035
 
 max_yaw_acc: 50
 Q_yaw: [9e6, 0]
