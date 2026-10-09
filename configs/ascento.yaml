@@ -76,6 +76,7 @@ can_interface: "can0"
 
 #####-----gimbal参数-----#####
 com_port: "/dev/gimbal"
+baud_rate: 115200
 
 #####-----buff_detector参数-----#####
 model: "assets/yolo11_buff_int8.xml"

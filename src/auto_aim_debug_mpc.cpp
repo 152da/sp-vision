@@ -156,7 +156,6 @@ int main(int argc, char * argv[])
     std::optional<Eigen::Vector2d> first_center;
     std::optional<Eigen::Vector2d> last_center;
     std::optional<double> last_center_yaw;
-    uint16_t last_bullet_count = 0;
 
     while (!quit) {
       if (gimbal.mode() != io::GimbalMode::AUTO_AIM) {
@@ -171,9 +170,6 @@ int main(int argc, char * argv[])
       gimbal.send(
         plan.control, plan.fire, plan.yaw, plan.yaw_vel, plan.yaw_acc, plan.pitch, plan.pitch_vel,
         plan.pitch_acc);
-
-      auto fired = gs.bullet_count > last_bullet_count;
-      last_bullet_count = gs.bullet_count;
 
       nlohmann::json data;
       data["t"] = tools::delta_time(std::chrono::steady_clock::now(), t0);
@@ -195,7 +191,6 @@ int main(int argc, char * argv[])
       data["plan_pitch_acc"] = plan.pitch_acc;
 
       data["fire"] = plan.fire ? 1 : 0;
-      data["fired"] = fired ? 1 : 0;
       data["target_valid"] = target.has_value() ? 1 : 0;
       data["plan_control"] = plan.control ? 1 : 0;
 

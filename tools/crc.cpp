@@ -88,4 +88,18 @@ bool check_crc16(const uint8_t * data, uint32_t len)
   return get_crc16(data, len - 2) == crc16;
 }
 
+// Modbus CRC16: poly 0xA001（0x8005的反射），init 0xFFFF
+// 与RM_Vision_Aiming的calculate_crc16一致
+uint16_t get_crc16_modbus(const uint8_t * data, uint32_t len)
+{
+  uint16_t crc = 0xFFFF;
+  while (len--) {
+    crc ^= *data++;
+    for (int j = 0; j < 8; j++) {
+      crc = (crc & 0x0001) ? (crc >> 1) ^ 0xA001 : crc >> 1;
+    }
+  }
+  return crc;
+}
+
 }  // namespace tools

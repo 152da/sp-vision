@@ -78,6 +78,7 @@ can_interface: "can0"
 
 #####-----gimbal参数-----#####
 com_port: "/dev/gimbal"
+baud_rate: 115200
 
 #####-----planner-----#####
 fire_thresh: 0.003

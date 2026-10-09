@@ -33,12 +33,9 @@ int main(int argc, char * argv[])
 
   auto t0 = std::chrono::steady_clock::now();
   auto last_mode = gimbal.mode();
-  uint16_t last_bullet_count = 0;
 
   auto fire = false;
   auto fire_count = 0;
-  auto fire_stamp = std::chrono::steady_clock::now();
-  auto first_fired = false;
 
   while (!exiter.exit()) {
     auto mode = gimbal.mode();
@@ -53,14 +50,6 @@ int main(int argc, char * argv[])
     auto q = gimbal.q(t);
     auto ypr = tools::eulers(q, 2, 1, 0);
 
-    auto fired = state.bullet_count > last_bullet_count;
-    last_bullet_count = state.bullet_count;
-
-    if (!first_fired && fired) {
-      first_fired = true;
-      tools::logger()->info("Gimbal first fired after: {:.3f}s", tools::delta_time(t, fire_stamp));
-    }
-
     if (fire && fire_count > 20) {
       // 0.2 s
       fire = false;
@@ -69,8 +58,6 @@ int main(int argc, char * argv[])
       // 1s
       fire = true;
       fire_count = 0;
-      fire_stamp = t;
-      first_fired = false;
     }
     fire_count++;
 
@@ -84,8 +71,6 @@ int main(int argc, char * argv[])
     data["pitch"] = state.pitch;
     data["vpitch"] = state.pitch_vel;
     data["bullet_speed"] = state.bullet_speed;
-    data["bullet_count"] = state.bullet_count;
-    data["fired"] = fired ? 1 : 0;
     data["fire"] = test_fire && fire ? 1 : 0;
     data["t"] = tools::delta_time(t, t0);
     plotter.plot(data);

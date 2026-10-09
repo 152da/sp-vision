@@ -17,6 +17,9 @@ uint16_t get_crc16(const uint8_t * data, uint32_t len);
 // len包括crc16
 bool check_crc16(const uint8_t * data, uint32_t len);
 
+// Modbus CRC16 (poly 0xA001, init 0xFFFF)，len不包括crc16
+uint16_t get_crc16_modbus(const uint8_t * data, uint32_t len);
+
 }  // namespace tools
 
 #endif  // TOOLS__CRC_HPP

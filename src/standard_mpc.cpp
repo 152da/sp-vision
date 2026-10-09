@@ -68,9 +68,6 @@ int main(int argc, char * argv[])
   auto last_mode{io::GimbalMode::IDLE};
 
   auto plan_thread = std::thread([&]() {//mpc规划单独一个线程
-    auto t0 = std::chrono::steady_clock::now();
-    uint16_t last_bullet_count = 0;
-
     while (!quit) {
       if (!target_queue.empty() && mode == io::GimbalMode::AUTO_AIM) {
         auto target = target_queue.front();
