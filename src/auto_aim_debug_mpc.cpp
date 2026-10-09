@@ -174,21 +174,22 @@ int main(int argc, char * argv[])
       nlohmann::json data;
       data["t"] = tools::delta_time(std::chrono::steady_clock::now(), t0);
 
-      data["gimbal_yaw"] = gs.yaw;
-      data["gimbal_yaw_vel"] = gs.yaw_vel;
-      data["gimbal_pitch"] = gs.pitch;
-      data["gimbal_pitch_vel"] = gs.pitch_vel;
+      // 以下角量（角度、角速度、角加速度）统一乘57.3转为deg显示
+      data["gimbal_yaw"] = gs.yaw * 57.3;
+      data["gimbal_yaw_vel"] = gs.yaw_vel * 57.3;
+      data["gimbal_pitch"] = gs.pitch * 57.3;
+      data["gimbal_pitch_vel"] = gs.pitch_vel * 57.3;
 
-      data["target_yaw"] = plan.target_yaw;
-      data["target_pitch"] = plan.target_pitch;
+      data["target_yaw"] = plan.target_yaw * 57.3;
+      data["target_pitch"] = plan.target_pitch * 57.3;
 
-      data["plan_yaw"] = plan.yaw;
-      data["plan_yaw_vel"] = plan.yaw_vel;
-      data["plan_yaw_acc"] = plan.yaw_acc;
+      data["plan_yaw"] = plan.yaw * 57.3;
+      data["plan_yaw_vel"] = plan.yaw_vel * 57.3;
+      data["plan_yaw_acc"] = plan.yaw_acc * 57.3;
 
-      data["plan_pitch"] = plan.pitch;
-      data["plan_pitch_vel"] = plan.pitch_vel;
-      data["plan_pitch_acc"] = plan.pitch_acc;
+      data["plan_pitch"] = plan.pitch * 57.3;
+      data["plan_pitch_vel"] = plan.pitch_vel * 57.3;
+      data["plan_pitch_acc"] = plan.pitch_acc * 57.3;
 
       data["fire"] = plan.fire ? 1 : 0;
       data["target_valid"] = target.has_value() ? 1 : 0;
@@ -206,8 +207,8 @@ int main(int argc, char * argv[])
         data["center_vy"] = x[3];
         data["center_z"] = x[4];
         data["center_vz"] = x[5];
-        data["center_a"] = x[6];
-        data["center_w"] = x[7];
+        data["center_a"] = x[6] * 57.3;   // 目标yaw角
+        data["center_w"] = x[7] * 57.3;   // 目标角速度
         data["center_r"] = x[8];
         data["center_l"] = x[9];
         data["center_h"] = x[10];
@@ -222,7 +223,8 @@ int main(int argc, char * argv[])
           data["center_step_x"] = center.x() - last_center->x();
           data["center_step_y"] = center.y() - last_center->y();
         }
-        if (last_center_yaw) data["center_a_step"] = tools::limit_rad(center_yaw - *last_center_yaw);
+        if (last_center_yaw)
+          data["center_a_step"] = tools::limit_rad(center_yaw - *last_center_yaw) * 57.3;
         last_center = center;
         last_center_yaw = center_yaw;
 
@@ -247,12 +249,12 @@ int main(int argc, char * argv[])
           data["aim_x"] = planner.debug_xyza.x();
           data["aim_y"] = planner.debug_xyza.y();
           data["aim_z"] = planner.debug_xyza.z();
-          data["aim_yaw"] = planner.debug_xyza.w();
+          data["aim_yaw"] = planner.debug_xyza.w() * 57.3;
         }
 
         data["target_z"] = x[4];   // z
         data["target_vz"] = x[5];  // vz
-        data["w"] = x[7];
+        data["w"] = x[7] * 57.3;   // 目标角速度 deg/s
       } else {
         first_center = std::nullopt;
         last_center = std::nullopt;
