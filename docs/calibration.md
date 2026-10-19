@@ -13,6 +13,21 @@
 
 **依赖顺序**：采集 → 内参 → 手眼。手眼标定依赖内参结果，顺序不能颠倒。
 
+## 编译
+
+在实车 Linux 环境的仓库根目录执行（编译全部代码）：
+
+```bash
+# 首次或跨平台残留缓存：清掉旧 build 目录后重新配置
+rm -rf build && cmake -B build
+
+# 编译全部目标
+cmake --build build -j$(nproc)
+```
+
+> 若之前在同一台 Linux 机器上已配置过，直接 `cmake --build build -j$(nproc)` 增量编译即可，无需删 build。
+> Windows 下残留的 build 缓存（VS 生成器）在 Linux 上会配置失败，所以换环境编译前先清目录。
+
 ---
 
 ## 0. 准备：配置标定板参数
