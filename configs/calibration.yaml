@@ -1,5 +1,7 @@
+# 棋盘格内角点数（内角点 = 方格数 - 1，如 9x6 内角点对应 10x7 方格）
 pattern_cols: 10
 pattern_rows: 7
+# 棋盘格方格边长，单位 mm
 center_distance_mm: 40
 
 R_gimbal2imubody: [1, 0, 0, 0, 1, 0,  0, 0, 1]
