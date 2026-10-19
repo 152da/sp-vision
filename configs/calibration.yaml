@@ -2,7 +2,7 @@
 pattern_cols: 10
 pattern_rows: 7
 # 棋盘格方格边长，单位 mm
-center_distance_mm: 40
+center_distance_mm: 60
 
 R_gimbal2imubody: [1, 0, 0, 0, 1, 0,  0, 0, 1]
 
