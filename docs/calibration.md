@@ -58,7 +58,7 @@ baud_rate: 115200
 ## 1. 数据采集（capture）
 
 ```bash
-./build/capture configs/calibration.yaml -o assets/img_with_q
+./build/capture configs/calibration.yaml -o=assets/img_with_q
 ```
 
 启动后若卡在 `[Gimbal] First q received.` 之前，说明串口没有数据——检查下位机是否在持续发送 35 字节协议帧（与实车运行时相同，标定对下位机无额外要求）。
@@ -77,7 +77,7 @@ baud_rate: 115200
 ## 2. 相机内参标定（calibrate_camera）
 
 ```bash
-./build/calibrate_camera assets/img_with_q -c configs/calibration.yaml
+./build/calibrate_camera assets/img_with_q -c=configs/calibration.yaml
 ```
 
 程序会逐张弹窗显示检测效果（按任意键看下一张），跳过 `[failure]` 的图，最后在终端输出一段 yaml：
@@ -98,9 +98,9 @@ distort_coeffs: [...]
 内参写入 yaml 后，二选一（输入相同）：
 
 ```bash
-./build/calibrate_handeye assets/img_with_q -c configs/calibration.yaml
+./build/calibrate_handeye assets/img_with_q -c=configs/calibration.yaml
 # 或
-./build/calibrate_robotworld_handeye assets/img_with_q -c configs/calibration.yaml
+./build/calibrate_robotworld_handeye assets/img_with_q -c=configs/calibration.yaml
 ```
 
 输出：
@@ -135,6 +135,7 @@ t_camera2gimbal: [...]   # 单位：米
 
 | 现象 | 原因 | 处理 |
 |---|---|---|
+| `Is a directory` / 数据存到了名为 `true` 的目录 | OpenCV `CommandLineParser` 可选参数必须用**等号**：`-o=path`，空格分隔会把值解析成 `true` | 用 `-o=`/`-c=` 形式重跑；误存的数据从 `true/` 搬回 |
 | `capture` 卡在 `Waiting for q` / `First q received` | 串口无数据 | 检查下位机是否在发帧；`ls /dev/serial/by-id/` 确认设备路径 |
 | 所有图片检测 `[failure]` | `pattern_cols/rows` 与板不符（含横竖颠倒） | 数内角点重填；横竖拿反则交换两值 |
 | 个别图 `[failure]` | 模糊/反光/角度过斜 | 正常，程序自动跳过 |
